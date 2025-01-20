@@ -3,37 +3,42 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
 )
 
 func main() {
-	if len(os.Args) != 3 {
-		fmt.Println("Usage: go run main.go <jsonfile> <path>")
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: jq <jsonfile> <path>")
 		return
 	}
 
 	jsonFile := os.Args[1]
-	path := os.Args[2]
-
-	data, err := ioutil.ReadFile(jsonFile)
+	var path string
+	if len(os.Args) == 2 {
+		path = ""
+	} else {
+		path = os.Args[2]
+	}
+	data, err := os.ReadFile(jsonFile)
 	if err != nil {
 		fmt.Println("Error reading JSON file:", err)
-		return
+		os.Exit(-1)
 	}
 
 	var jsonData interface{}
 	err = json.Unmarshal(data, &jsonData)
 	if err != nil {
 		fmt.Println("Error parsing JSON:", err)
+		os.Exit(-1)
 		return
 	}
 
 	result, err := getValueAtPath(jsonData, path)
 	if err != nil {
 		fmt.Println("Error:", err)
+		os.Exit(-1)
 		return
 	}
 	switch result := result.(type) {
@@ -42,8 +47,8 @@ func main() {
 			fmt.Println(key)
 		}
 	case []interface{}:
-		for key, _ := range result {
-			fmt.Println(key)
+		for key, value := range result {
+			fmt.Printf("%v:%s\n", key, value)
 		}
 	case float64:
 		fmt.Printf("%d\n", int64(result))
