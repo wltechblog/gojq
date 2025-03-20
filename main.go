@@ -3,28 +3,54 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: jq <jsonfile> <path>")
-		return
-	}
-
-	jsonFile := os.Args[1]
+	var data []byte
 	var path string
-	if len(os.Args) == 2 {
-		path = ""
+	var err error
+	
+	// Check if stdin is a pipe
+	stdinStat, _ := os.Stdin.Stat()
+	isPipe := (stdinStat.Mode() & os.ModeCharDevice) == 0
+	
+	if isPipe {
+		// Read from stdin
+		data, err = io.ReadAll(os.Stdin)
+		if err != nil {
+			fmt.Println("Error reading from stdin:", err)
+			os.Exit(-1)
+		}
+		
+		// Path is the first argument if provided
+		if len(os.Args) > 1 {
+			path = os.Args[1]
+		} else {
+			path = ""
+		}
 	} else {
-		path = os.Args[2]
-	}
-	data, err := os.ReadFile(jsonFile)
-	if err != nil {
-		fmt.Println("Error reading JSON file:", err)
-		os.Exit(-1)
+		// Original file-based functionality
+		if len(os.Args) < 2 {
+			fmt.Println("Usage: jq <jsonfile> [path] or pipe JSON data and provide [path] as argument")
+			return
+		}
+		
+		jsonFile := os.Args[1]
+		if len(os.Args) == 2 {
+			path = ""
+		} else {
+			path = os.Args[2]
+		}
+		
+		data, err = os.ReadFile(jsonFile)
+		if err != nil {
+			fmt.Println("Error reading JSON file:", err)
+			os.Exit(-1)
+		}
 	}
 
 	var jsonData interface{}
