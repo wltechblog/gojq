@@ -13,11 +13,11 @@ func main() {
 	var data []byte
 	var path string
 	var err error
-	
+
 	// Check if stdin is a pipe
 	stdinStat, _ := os.Stdin.Stat()
 	isPipe := (stdinStat.Mode() & os.ModeCharDevice) == 0
-	
+
 	if isPipe {
 		// Read from stdin
 		data, err = io.ReadAll(os.Stdin)
@@ -25,7 +25,7 @@ func main() {
 			fmt.Println("Error reading from stdin:", err)
 			os.Exit(-1)
 		}
-		
+
 		// Path is the first argument if provided
 		if len(os.Args) > 1 {
 			path = os.Args[1]
@@ -35,17 +35,17 @@ func main() {
 	} else {
 		// Original file-based functionality
 		if len(os.Args) < 2 {
-			fmt.Println("Usage: jq <jsonfile> [path] or pipe JSON data and provide [path] as argument")
+			fmt.Println("Usage: gojq <jsonfile> [path] or pipe JSON data and provide [path] as argument")
 			return
 		}
-		
+
 		jsonFile := os.Args[1]
 		if len(os.Args) == 2 {
 			path = ""
 		} else {
 			path = os.Args[2]
 		}
-		
+
 		data, err = os.ReadFile(jsonFile)
 		if err != nil {
 			fmt.Println("Error reading JSON file:", err)
@@ -84,6 +84,9 @@ func main() {
 }
 
 func getValueAtPath(data interface{}, path string) (interface{}, error) {
+	if path == "" {
+		return data, nil
+	}
 	segments := strings.Split(path, ".")
 	var err error
 	for _, segment := range segments {

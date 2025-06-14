@@ -1,3 +1,3 @@
-module github.com/wltechblog/jq
+module github.com/wltechblog/gojq
 
 go 1.22.0
